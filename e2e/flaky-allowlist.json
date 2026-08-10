@@ -1,0 +1,21 @@
+{
+  "comment": "Specs allowed to retry beyond the default because they depend on flaky infrastructure (live backend round trips, engine-specific paint timing). Every entry needs a reason and must also call allowTransientRetries() in the spec. Anything NOT listed here that goes flaky fails the job via scripts/assert-no-flaky.mjs.",
+  "allow": [
+    {
+      "file": "api.spec.ts",
+      "reason": "Direct PostgREST round trips; DNS/TLS jitter against the hosted backend."
+    },
+    {
+      "file": "api-update.spec.ts",
+      "reason": "Direct PostgREST writes; same network jitter as api.spec.ts."
+    },
+    {
+      "file": "session-resume-after-suspension.spec.ts",
+      "reason": "Depends on a real token refresh round trip after simulated suspension."
+    },
+    {
+      "file": "tma-suspend-resume.spec.ts",
+      "reason": "Lifecycle timing plus a live refresh request."
+    }
+  ]
+}

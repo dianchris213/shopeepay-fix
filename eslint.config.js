@@ -37,4 +37,13 @@ export default tseslint.config(
     },
   },
   eslintPluginPrettier,
+  {
+    // Playwright fixtures use the `async ({}, use) => {}` signature by design,
+    // and `use` there is the Playwright fixture callback, not a React hook.
+    files: ["e2e/**/*.{ts,tsx}"],
+    rules: {
+      "no-empty-pattern": "off",
+      "react-hooks/rules-of-hooks": "off",
+    },
+  },
 );
