@@ -379,7 +379,14 @@ export function AddTransactionSheet({ open, onClose }: Props) {
         <p className="text-xs font-semibold tracking-tight">
           {t("tx.category")} <span style={{ color: "var(--destructive)" }}>*</span>
         </p>
-        <div className="mt-2.5 grid grid-cols-4 gap-2" role="group" aria-label={t("tx.category")}>
+        <div
+          ref={categoryGroupRef}
+          tabIndex={-1}
+          data-testid="tx-category-group"
+          className="mt-2.5 grid grid-cols-4 gap-2 outline-none"
+          role="group"
+          aria-label={t("tx.category")}
+        >
           {visibleCategories.map((item) => {
             const Icon = iconMap[item.icon];
             const isActive = categoryId === item.id;
