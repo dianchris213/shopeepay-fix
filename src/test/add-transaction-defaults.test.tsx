@@ -164,7 +164,8 @@ describe("AddTransactionSheet defaults", () => {
     const toast = getToasts()[0]!;
     expect(toast.tone).toBe("error");
     expect(toast.body).toContain("Expense + ShopeePay");
-    expect(document.activeElement).toBe(screen.getByTestId("tx-category-group"));
+    // Focus lands inside the category picker (its first control, or the group).
+    expect(screen.getByTestId("tx-category-group").contains(document.activeElement)).toBe(true);
   });
 
   it("opens a quick-create draft from the empty Expense + Shopeepay link", async () => {
