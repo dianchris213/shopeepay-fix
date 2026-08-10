@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -11,6 +12,14 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { addBreadcrumb } from "@/lib/telemetry";
+import { installTelemetry } from "@/lib/telemetry-runtime";
+
+import { AuthGate } from "@/components/AuthGate";
+import { ThemeApplier } from "@/components/ThemeApplier";
+import { ToastHost } from "@/components/ToastHost";
+import { BackfillNotice } from "@/components/BackfillNotice";
+import { TelegramInit } from "@/components/TelegramInit";
 
 function NotFoundComponent() {
   return (
@@ -76,12 +85,24 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      {
+        name: "viewport",
+        content:
+          "width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no",
+      },
+      { title: "C2H KEUANGAN — Personal Finance Tracker" },
+      {
+        name: "description",
+        content:
+          "Track wallets, bills and spending in Rupiah with C2H KEUANGAN, a secure cloud-synced finance tracker.",
+      },
+      { name: "author", content: "C2H KEUANGAN" },
+      { property: "og:title", content: "C2H KEUANGAN — Personal Finance Tracker" },
+      {
+        property: "og:description",
+        content:
+          "Track wallets, bills and spending in Rupiah with C2H KEUANGAN, a secure cloud-synced finance tracker.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@Lovable" },
@@ -93,6 +114,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
     ],
+    scripts: [{ src: "https://telegram.org/js/telegram-web-app.js" }],
   }),
   shellComponent: RootShell,
   component: RootComponent,
@@ -102,7 +124,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    // Telegram's WebApp script writes --tg-viewport-* inline styles onto <html>
+    // before React hydrates, which is expected and must not warn.
+    <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>
@@ -116,11 +140,30 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isReset = pathname.startsWith("/reset-password");
+
+  // Global telemetry funnel: window errors, unhandled rejections and
+  // lifecycle breadcrumbs. Purely observational.
+  useEffect(() => installTelemetry(), []);
+  useEffect(() => {
+    addBreadcrumb("navigation", pathname);
+  }, [pathname]);
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      <TelegramInit />
+      <ThemeApplier />
+      <ToastHost />
+      <BackfillNotice />
+      {isReset ? (
+        <Outlet />
+      ) : (
+        <AuthGate>
+          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+          <Outlet />
+        </AuthGate>
+      )}
     </QueryClientProvider>
   );
 }

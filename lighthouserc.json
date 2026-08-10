@@ -1,0 +1,79 @@
+{
+  "ci": {
+    "collect": {
+      "startServerCommand": "bun run preview --port 4173",
+      "startServerReadyPattern": "Local",
+      "startServerReadyTimeout": 120000,
+      "url": ["http://localhost:4173/", "http://localhost:4173/analytics"],
+      "numberOfRuns": 3,
+      "settings": {
+        "preset": "desktop",
+        "budgetsPath": "./lighthouse-budgets.json",
+        "onlyCategories": ["performance", "accessibility", "best-practices"],
+        "skipAudits": ["uses-http2", "canonical", "is-crawlable"]
+      }
+    },
+    "assertMatrix": [
+      {
+        "comment": "Home Dashboard. Calibrated against the real Vite output: ~765 KB of JS (index + routes + i18n + icon-map) and ~96 KB of CSS. Caps sit just above the measured build so a genuine regression fails while the current bundle passes.",
+        "matchingUrlPattern": "http://localhost:4173/$",
+        "assertions": {
+          "categories:performance": ["error", { "minScore": 0.8 }],
+          "categories:accessibility": ["error", { "minScore": 0.9 }],
+          "categories:best-practices": ["warn", { "minScore": 0.9 }],
+
+          "first-contentful-paint": ["error", { "maxNumericValue": 2400 }],
+          "largest-contentful-paint": ["error", { "maxNumericValue": 3400 }],
+          "total-blocking-time": ["error", { "maxNumericValue": 600 }],
+          "cumulative-layout-shift": ["error", { "maxNumericValue": 0.1 }],
+          "speed-index": ["warn", { "maxNumericValue": 3500 }],
+          "interactive": ["warn", { "maxNumericValue": 4500 }],
+
+          "resource-summary:script:size": ["error", { "maxNumericValue": 920000 }],
+          "resource-summary:stylesheet:size": ["error", { "maxNumericValue": 130000 }],
+          "resource-summary:image:size": ["warn", { "maxNumericValue": 300000 }],
+          "resource-summary:total:size": ["error", { "maxNumericValue": 1250000 }],
+
+          "performance-budget": ["error", { "maxLength": 0 }],
+
+          "unused-javascript": "off",
+          "uses-long-cache-ttl": "off",
+          "unsized-images": "off",
+          "csp-xss": "off"
+        }
+      },
+      {
+        "comment": "Analytics view. Adds the lazily-loaded Recharts route chunk (~394 KB) on top of the shared app shell, so its budgets are deliberately higher than the Home ones.",
+        "matchingUrlPattern": "http://localhost:4173/analytics$",
+        "assertions": {
+          "categories:performance": ["error", { "minScore": 0.7 }],
+          "categories:accessibility": ["error", { "minScore": 0.9 }],
+          "categories:best-practices": ["warn", { "minScore": 0.9 }],
+
+          "first-contentful-paint": ["error", { "maxNumericValue": 2800 }],
+          "largest-contentful-paint": ["error", { "maxNumericValue": 4000 }],
+          "total-blocking-time": ["error", { "maxNumericValue": 900 }],
+          "cumulative-layout-shift": ["error", { "maxNumericValue": 0.1 }],
+          "speed-index": ["warn", { "maxNumericValue": 4200 }],
+          "interactive": ["warn", { "maxNumericValue": 5500 }],
+
+          "resource-summary:script:size": ["error", { "maxNumericValue": 1350000 }],
+          "resource-summary:stylesheet:size": ["error", { "maxNumericValue": 130000 }],
+          "resource-summary:image:size": ["warn", { "maxNumericValue": 300000 }],
+          "resource-summary:total:size": ["error", { "maxNumericValue": 1700000 }],
+
+          "performance-budget": ["error", { "maxLength": 0 }],
+
+          "unused-javascript": "off",
+          "uses-long-cache-ttl": "off",
+          "unsized-images": "off",
+          "csp-xss": "off"
+        }
+      }
+    ],
+    "upload": {
+      "target": "filesystem",
+      "outputDir": ".lighthouseci"
+    }
+  }
+}

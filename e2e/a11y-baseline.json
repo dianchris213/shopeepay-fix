@@ -1,0 +1,8 @@
+{
+  "description": "Managed allowlist of documented, pre-existing accessibility exceptions. Anything NOT listed here fails the build. See e2e/a11y.ts for the matching rules and e2e/README.md for the review process.",
+  "policy": {
+    "blockingImpacts": ["serious", "critical"],
+    "tags": ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]
+  },
+  "exceptions": []
+}
