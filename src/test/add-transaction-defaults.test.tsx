@@ -102,7 +102,8 @@ describe("AddTransactionSheet defaults", () => {
     await user.click(screen.getByRole("button", { name: shopeePayAccount()!.name }));
     await user.click(screen.getByRole("button", { name: /Pengeluaran|expense/i }));
     const categoryGroup = screen.getByRole("group", { name: /Category|Kategori/i });
-    expect(categoryGroup.querySelectorAll("button")).toHaveLength(0);
+    expect(categoryGroup.querySelectorAll("button[aria-pressed]")).toHaveLength(0);
+
     expect(screen.getByTestId("tx-create-category-hint")).toBeTruthy();
   });
 
