@@ -211,10 +211,29 @@ export function AddTransactionSheet({ open, onClose }: Props) {
   /** Undo window (ms) offered after a Driver COD deduction is booked. */
   const UNDO_MS = 8000;
 
+  /** Moves keyboard focus to the category picker (first chip, else the group). */
+  function focusCategoryPicker() {
+    const group = categoryGroupRef.current;
+    if (!group) return;
+    const firstChip = group.querySelector<HTMLButtonElement>("button");
+    (firstChip ?? group).focus();
+  }
+
   function handleSave() {
     if (submitLock.current) return;
     if (!canSave || !validation.ok) {
       setTouched(true);
+      if (invalidFields.includes("category")) {
+        pushToast({
+          tone: "error",
+          title: t("tx.categoryRequired"),
+          body:
+            kind === "expense" && isShopeePayWallet(selectedWallet)
+              ? "Expense + ShopeePay belum punya kategori. Buat kategori dulu di Pengaturan / Settings."
+              : undefined,
+        });
+        focusCategoryPicker();
+      }
       return;
     }
     // Driver COD subtracts from the Shopee Pay balance — always confirm first,
