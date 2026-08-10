@@ -386,21 +386,34 @@ export function AddTransactionSheet({ open, onClose }: Props) {
           )}
         </div>
 
-        {/* Universal rule: the category always starts empty, for every wallet and tab. */}
-        <p
-          data-testid="tx-create-category-hint"
-          className="text-muted-foreground mt-2 text-[11px] leading-relaxed"
-        >
-          Silakan pilih atau buat kategori terlebih dahulu di{" "}
-          <button
-            type="button"
-            data-testid="tx-create-category-link"
-            onClick={() => setCategoryManagerOpen(true)}
-            className="tap text-primary font-semibold underline underline-offset-2"
+        {/* Expense: category always starts empty. */}
+        {kind === "expense" && (
+          <p
+            data-testid="tx-create-category-hint"
+            className="text-muted-foreground mt-2 text-[11px] leading-relaxed"
           >
-            Pengaturan / Settings
-          </button>
-        </p>
+            Silakan pilih atau buat kategori terlebih dahulu di{" "}
+            <button
+              type="button"
+              data-testid="tx-create-category-link"
+              onClick={() => setCategoryManagerOpen(true)}
+              className="tap text-primary font-semibold underline underline-offset-2"
+            >
+              Pengaturan / Settings
+            </button>
+          </p>
+        )}
+
+        {/* Income + Shopee Pay: Driver COD is pre-selected. */}
+        {isShopeeIncome && (
+          <p
+            data-testid="tx-driver-cod-default-hint"
+            className="text-muted-foreground mt-2 text-[11px] leading-relaxed"
+          >
+            Kategori default: Driver COD (Anda tetap dapat memilih atau menambah kategori lain)
+          </p>
+        )}
+
 
         {touched && !categoryId && (
           <p
