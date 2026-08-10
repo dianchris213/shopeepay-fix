@@ -95,12 +95,16 @@ export function AddTransactionSheet({ open, onClose }: Props) {
 
   const visibleCategories = useMemo(
     () =>
-      visibleCategoriesFor({
-        categories: allCategories,
-        kind,
-        walletType: selectedWallet?.type ?? null,
-        walletId: selectedWallet?.id ?? null,
-      }),
+      selectedWallet
+        ? visibleCategoriesFor({
+            categories: allCategories,
+            kind,
+            walletType: selectedWallet.type,
+            walletId: selectedWallet.id,
+          })
+        : // Nothing is shown until a wallet is picked — the wallet decides which
+          // categories are legal, so the first open must not offer stale chips.
+          [],
     [allCategories, kind, selectedWallet],
   );
 
