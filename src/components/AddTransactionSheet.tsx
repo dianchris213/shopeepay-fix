@@ -603,8 +603,13 @@ export function AddTransactionSheet({ open, onClose }: Props) {
 
       <CategoryManagerSheet
         open={categoryManagerOpen}
-        onClose={() => setCategoryManagerOpen(false)}
+        onClose={() => {
+          setCategoryManagerOpen(false);
+          setQuickCreate(false);
+        }}
         walletId={selectedWallet?.type === "Custom" ? selectedWallet.id : null}
+        initialKind={kind}
+        startCreating={quickCreate}
       />
     </Sheet>
   );
