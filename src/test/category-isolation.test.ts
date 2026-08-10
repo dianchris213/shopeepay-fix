@@ -115,6 +115,26 @@ describe("category isolation per wallet type", () => {
     expect(visible.map((c) => c.name)).toEqual(["Driver COD"]);
   });
 
+  it("shows only Driver COD for ShopeePay income even when other income categories exist", () => {
+    const visible = visibleCategoriesFor({
+      categories: all,
+      kind: "income",
+      walletType: "Driver",
+      walletId: "shopee",
+    });
+    expect(visible.map((c) => c.name)).toEqual(["Driver COD"]);
+  });
+
+  it("shows no categories for ShopeePay expense", () => {
+    const visible = visibleCategoriesFor({
+      categories: all,
+      kind: "expense",
+      walletType: "Driver",
+      walletId: "shopee",
+    });
+    expect(visible).toEqual([]);
+  });
+
   it("returns an empty list rather than falling back to another set", () => {
     expect(
       visibleCategoriesFor({ categories: [cat("Food")], kind: "expense", walletType: "Custom" }),
