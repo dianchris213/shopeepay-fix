@@ -272,6 +272,24 @@ export function visibleCategoriesFor(input: {
   /** Id of the selected wallet, used to resolve per-wallet custom categories. */
   walletId?: string | null;
 }): Category[] {
+  // Shopeepay is intentionally strict: Income exposes only Driver COD,
+  // while Expense has no selectable categories at all.
+  if (input.walletType === "Driver") {
+    if (input.kind === "expense") return [];
+
+    const driverCod = input.categories.find(
+      (c) => c.kind === "income" && isDriverCodCategoryName(c.name),
+    );
+    return [
+      driverCod ?? {
+        id: "c11",
+        name: DRIVER_COD_CATEGORY,
+        icon: "transport",
+        kind: "income",
+      },
+    ];
+  }
+
   const sameKind = input.categories
     .filter((c) => c.kind === input.kind)
     // "Driver COD" is income-only; Expense keeps the plain COD categories.
@@ -280,23 +298,7 @@ export function visibleCategoriesFor(input: {
   const scoped = isCustomWallet
     ? sameKind.filter((c) => !!input.walletId && c.walletId === input.walletId)
     : sameKind.filter((c) => !c.walletId && !isCustomCategory(c.name));
-  // Shopeepay (Driver wallet) income always offers "Driver COD", even if the
-  // reserved row was filtered out or removed from an older install.
-  const withDriverCod =
-    input.walletType === "Driver" &&
-    input.kind === "income" &&
-    !scoped.some((c) => isDriverCodCategoryName(c.name))
-      ? [
-          ...scoped,
-          {
-            id: "c11",
-            name: DRIVER_COD_CATEGORY,
-            icon: "transport",
-            kind: "income",
-          } satisfies Category,
-        ]
-      : scoped;
-  return [...withDriverCod].sort(
+  return [...scoped].sort(
     (a, b) => Number(isDriverCategory(b.name)) - Number(isDriverCategory(a.name)),
   );
 }

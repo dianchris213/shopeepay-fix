@@ -410,7 +410,7 @@ export function AddTransactionSheet({ open, onClose }: Props) {
             data-testid="tx-driver-cod-default-hint"
             className="text-muted-foreground mt-2 text-[11px] leading-relaxed"
           >
-            Kategori default: Driver COD (Anda tetap dapat memilih atau menambah kategori lain)
+            Kategori ShopeePay: Driver COD
           </p>
         )}
 

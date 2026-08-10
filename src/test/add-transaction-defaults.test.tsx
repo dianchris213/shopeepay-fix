@@ -81,6 +81,9 @@ describe("AddTransactionSheet defaults", () => {
 
     await waitFor(() => {
       const group = screen.getByRole("group", { name: /Category|Kategori/i });
+      expect(Array.from(group.querySelectorAll("button")).map((button) => button.textContent?.trim())).toEqual([
+        "Driver COD",
+      ]);
       const active = Array.from(group.querySelectorAll("button")).find(
         (b) => b.getAttribute("aria-pressed") === "true",
       );
@@ -98,6 +101,8 @@ describe("AddTransactionSheet defaults", () => {
     await user.click(screen.getByRole("button", { name: /Pemasukan|income/i }));
     await user.click(screen.getByRole("button", { name: shopeePayAccount()!.name }));
     await user.click(screen.getByRole("button", { name: /Pengeluaran|expense/i }));
+    const categoryGroup = screen.getByRole("group", { name: /Category|Kategori/i });
+    expect(categoryGroup.querySelectorAll("button")).toHaveLength(0);
     expect(screen.getByTestId("tx-create-category-hint")).toBeTruthy();
   });
 });
