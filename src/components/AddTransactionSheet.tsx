@@ -113,16 +113,34 @@ export function AddTransactionSheet({ open, onClose }: Props) {
     if (categoryId && !visibleCategories.some((c) => c.id === categoryId)) setCategoryId(null);
   }, [categoryId, visibleCategories]);
 
+  const isShopeeIncome = kind === "income" && isShopeePayWallet(selectedWallet);
+
   /**
-   * Universal rule: the category selector always resets to empty whenever the
-   * tab or the wallet changes — no wallet-specific defaults anymore.
+   * Category default rules:
+   * - Expense tab: always empty.
+   * - Income tab + Shopee Pay wallet: auto-select "Driver COD".
+   * - Anything else: empty.
    */
   useEffect(() => {
     const key = `${kind}:${selectedWallet?.id ?? "none"}`;
     if (lastDefaults.current === key) return;
     lastDefaults.current = key;
+
+    if (kind === "expense") {
+      setCategoryId(null);
+      return;
+    }
+
+    if (isShopeeIncome) {
+      const driverCodCategory = visibleCategories.find(
+        (c) => c.name.trim().toLowerCase() === "driver cod",
+      );
+      setCategoryId(driverCodCategory ? driverCodCategory.id : null);
+      return;
+    }
+
     setCategoryId(null);
-  }, [kind, selectedWallet?.id]);
+  }, [kind, selectedWallet?.id, isShopeeIncome, visibleCategories]);
 
   /** Picking a Driver category books it on the persistent Shopee Pay wallet. */
   function pickCategory(id: string, name: string) {
@@ -133,17 +151,20 @@ export function AddTransactionSheet({ open, onClose }: Props) {
     }
   }
 
-  /** Switching the tab always clears the category. */
+  /** Switching the tab re-evaluates the category default. */
   function selectKind(nextKind: "expense" | "income") {
     setKind(nextKind);
     setCategoryId(null);
+    lastDefaults.current = null;
   }
 
-  /** Switching the wallet always clears the category. */
+  /** Switching the wallet re-evaluates the category default. */
   function selectWallet(nextWalletId: string) {
     setWalletId(nextWalletId);
     setCategoryId(null);
+    lastDefaults.current = null;
   }
+
 
   const validation = validateTransactionInput({
     kind,
