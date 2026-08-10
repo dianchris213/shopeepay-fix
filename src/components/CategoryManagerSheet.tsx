@@ -26,6 +26,10 @@ type Props = {
   onClose: () => void;
   /** Optional initial scope: a custom wallet id. Defaults to the system list. */
   walletId?: string | null;
+  /** Preselect the expense/income tab when opened from another sheet. */
+  initialKind?: CategoryKind;
+  /** Open straight into the "new category" draft row (quick create). */
+  startCreating?: boolean;
 };
 
 function IconPicker({ value, onChange }: { value: IconKey; onChange: (icon: IconKey) => void }) {
