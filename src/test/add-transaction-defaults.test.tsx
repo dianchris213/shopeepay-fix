@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { AddTransactionSheet } from "@/components/AddTransactionSheet";
+import { clearToasts, getToasts } from "@/lib/toast-store";
 import {
   ensureShopeePayAccount,
   hydrateState,
@@ -31,6 +32,18 @@ describe("AddTransactionSheet defaults", () => {
   beforeEach(() => {
     hydrateState({ ...initialState, accounts: [cash], transactions: [], bills: [] });
     ensureShopeePayAccount();
+    clearToasts();
+  });
+
+  it("shows the wallet prompt before any wallet is picked", async () => {
+    render(<AddTransactionSheet open onClose={() => {}} />);
+    await screen.findByRole("dialog");
+
+    const group = screen.getByRole("group", { name: /Category|Kategori/i });
+    expect(group.querySelectorAll("button")).toHaveLength(0);
+    expect(screen.getByTestId("tx-empty-categories").textContent).toContain(
+      "Pilih Wallet Source dulu",
+    );
   });
 
   it("opens on Expense with no category selected and an interactive Settings hint", async () => {
@@ -136,5 +149,33 @@ describe("AddTransactionSheet defaults", () => {
     expect(screen.getByTestId("tx-category-required")).toBeTruthy();
     expect(shopeePayAccount()!.amount).toBe(0);
   });
-});
 
+  it("toasts and focuses the category picker on an Expense + Shopeepay submit", async () => {
+    const user = userEvent.setup();
+    render(<AddTransactionSheet open onClose={() => {}} />);
+    await screen.findByRole("dialog");
+
+    await user.click(screen.getByRole("button", { name: shopeePayAccount()!.name }));
+    await user.type(screen.getByLabelText("Amount in rupiah"), "25000");
+    const save = screen.getByRole("button", { name: /Simpan|Save/i });
+    await user.click(save.parentElement!);
+
+    await waitFor(() => expect(getToasts().length).toBeGreaterThan(0));
+    const toast = getToasts()[0]!;
+    expect(toast.tone).toBe("error");
+    expect(toast.body).toContain("Expense + ShopeePay");
+    expect(document.activeElement).toBe(screen.getByTestId("tx-category-group"));
+  });
+
+  it("opens a quick-create draft from the empty Expense + Shopeepay link", async () => {
+    const user = userEvent.setup();
+    render(<AddTransactionSheet open onClose={() => {}} />);
+    await screen.findByRole("dialog");
+
+    await user.click(screen.getByRole("button", { name: shopeePayAccount()!.name }));
+    await user.click(screen.getByTestId("tx-empty-categories-link"));
+
+    const draft = await screen.findByLabelText("New category name");
+    expect(draft).toBeTruthy();
+  });
+});
