@@ -123,7 +123,8 @@ export function AddTransactionSheet({ open, onClose }: Props) {
    */
   useEffect(() => {
     const key = `${kind}:${selectedWallet?.id ?? "none"}`;
-    if (lastDefaults.current === key) return;
+    const pending = isShopeeIncome && visibleCategories.length === 0;
+    if (lastDefaults.current === key || pending) return;
     lastDefaults.current = key;
 
     if (kind === "expense") {
@@ -141,6 +142,7 @@ export function AddTransactionSheet({ open, onClose }: Props) {
 
     setCategoryId(null);
   }, [kind, selectedWallet?.id, isShopeeIncome, visibleCategories]);
+
 
   /** Picking a Driver category books it on the persistent Shopee Pay wallet. */
   function pickCategory(id: string, name: string) {
