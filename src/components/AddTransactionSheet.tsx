@@ -419,13 +419,18 @@ export function AddTransactionSheet({ open, onClose }: Props) {
               data-testid="tx-empty-categories"
               className="text-muted-foreground col-span-4 text-[11px] leading-relaxed"
             >
-              {kind === "expense" && isShopeePayWallet(selectedWallet) ? (
+              {!selectedWallet ? (
+                "Pilih Wallet Source dulu untuk melihat kategori yang tersedia."
+              ) : kind === "expense" && isShopeePayWallet(selectedWallet) ? (
                 <>
                   Belum ada kategori untuk Expense + ShopeePay. Buat kategori dulu di{" "}
                   <button
                     type="button"
                     data-testid="tx-empty-categories-link"
-                    onClick={() => setCategoryManagerOpen(true)}
+                    onClick={() => {
+                      setQuickCreate(true);
+                      setCategoryManagerOpen(true);
+                    }}
                     className="tap text-primary font-semibold underline underline-offset-2"
                   >
                     Pengaturan / Settings
