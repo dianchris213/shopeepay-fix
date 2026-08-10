@@ -587,7 +587,7 @@ export function AddTransactionSheet({ open, onClose }: Props) {
         </div>
       )}
 
-      <div onClick={() => !canSave && setTouched(true)} className="pb-4">
+      <div onClick={() => !canSave && handleSave()} className="pb-4">
         <PrimaryButton disabled={!canSave} onClick={handleSave}>
           {submitting && !saved ? (
             t("err.saving")
