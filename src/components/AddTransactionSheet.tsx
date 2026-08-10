@@ -67,9 +67,12 @@ export function AddTransactionSheet({ open, onClose }: Props) {
   const [cashNeeded, setCashNeeded] = useState(false);
   // Shortcut from the empty-category hint straight into category management.
   const [categoryManagerOpen, setCategoryManagerOpen] = useState(false);
+  // Quick create opens the manager directly on an empty draft row.
+  const [quickCreate, setQuickCreate] = useState(false);
   const submitLock = useRef(false);
   const timers = useRef<number[]>([]);
   const lastDefaults = useRef<string | null>(null);
+  const categoryGroupRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => () => timers.current.forEach(window.clearTimeout), []);
 
@@ -85,6 +88,7 @@ export function AddTransactionSheet({ open, onClose }: Props) {
     setCodConfirm(false);
     setCashNeeded(false);
     setCategoryManagerOpen(false);
+    setQuickCreate(false);
     setTouched(false);
     setSubmitting(false);
     submitLock.current = false;
@@ -95,12 +99,16 @@ export function AddTransactionSheet({ open, onClose }: Props) {
 
   const visibleCategories = useMemo(
     () =>
-      visibleCategoriesFor({
-        categories: allCategories,
-        kind,
-        walletType: selectedWallet?.type ?? null,
-        walletId: selectedWallet?.id ?? null,
-      }),
+      selectedWallet
+        ? visibleCategoriesFor({
+            categories: allCategories,
+            kind,
+            walletType: selectedWallet.type,
+            walletId: selectedWallet.id,
+          })
+        : // Nothing is shown until a wallet is picked — the wallet decides which
+          // categories are legal, so the first open must not offer stale chips.
+          [],
     [allCategories, kind, selectedWallet],
   );
 
@@ -204,10 +212,29 @@ export function AddTransactionSheet({ open, onClose }: Props) {
   /** Undo window (ms) offered after a Driver COD deduction is booked. */
   const UNDO_MS = 8000;
 
+  /** Moves keyboard focus to the category picker (first chip, else the group). */
+  function focusCategoryPicker() {
+    const group = categoryGroupRef.current;
+    if (!group) return;
+    const firstChip = group.querySelector<HTMLButtonElement>("button");
+    (firstChip ?? group).focus();
+  }
+
   function handleSave() {
     if (submitLock.current) return;
     if (!canSave || !validation.ok) {
       setTouched(true);
+      if (invalidFields.includes("category")) {
+        pushToast({
+          tone: "error",
+          title: t("tx.categoryRequired"),
+          body:
+            kind === "expense" && isShopeePayWallet(selectedWallet)
+              ? "Expense + ShopeePay belum punya kategori. Buat kategori dulu di Pengaturan / Settings."
+              : undefined,
+        });
+        focusCategoryPicker();
+      }
       return;
     }
     // Driver COD subtracts from the Shopee Pay balance — always confirm first,
@@ -353,7 +380,14 @@ export function AddTransactionSheet({ open, onClose }: Props) {
         <p className="text-xs font-semibold tracking-tight">
           {t("tx.category")} <span style={{ color: "var(--destructive)" }}>*</span>
         </p>
-        <div className="mt-2.5 grid grid-cols-4 gap-2" role="group" aria-label={t("tx.category")}>
+        <div
+          ref={categoryGroupRef}
+          tabIndex={-1}
+          data-testid="tx-category-group"
+          className="mt-2.5 grid grid-cols-4 gap-2 outline-none"
+          role="group"
+          aria-label={t("tx.category")}
+        >
           {visibleCategories.map((item) => {
             const Icon = iconMap[item.icon];
             const isActive = categoryId === item.id;
@@ -386,13 +420,18 @@ export function AddTransactionSheet({ open, onClose }: Props) {
               data-testid="tx-empty-categories"
               className="text-muted-foreground col-span-4 text-[11px] leading-relaxed"
             >
-              {kind === "expense" && isShopeePayWallet(selectedWallet) ? (
+              {!selectedWallet ? (
+                "Pilih Wallet Source dulu untuk melihat kategori yang tersedia."
+              ) : kind === "expense" && isShopeePayWallet(selectedWallet) ? (
                 <>
                   Belum ada kategori untuk Expense + ShopeePay. Buat kategori dulu di{" "}
                   <button
                     type="button"
                     data-testid="tx-empty-categories-link"
-                    onClick={() => setCategoryManagerOpen(true)}
+                    onClick={() => {
+                      setQuickCreate(true);
+                      setCategoryManagerOpen(true);
+                    }}
                     className="tap text-primary font-semibold underline underline-offset-2"
                   >
                     Pengaturan / Settings
@@ -549,7 +588,7 @@ export function AddTransactionSheet({ open, onClose }: Props) {
         </div>
       )}
 
-      <div onClick={() => !canSave && setTouched(true)} className="pb-4">
+      <div onClick={() => !canSave && handleSave()} className="pb-4">
         <PrimaryButton disabled={!canSave} onClick={handleSave}>
           {submitting && !saved ? (
             t("err.saving")
@@ -565,8 +604,13 @@ export function AddTransactionSheet({ open, onClose }: Props) {
 
       <CategoryManagerSheet
         open={categoryManagerOpen}
-        onClose={() => setCategoryManagerOpen(false)}
+        onClose={() => {
+          setCategoryManagerOpen(false);
+          setQuickCreate(false);
+        }}
         walletId={selectedWallet?.type === "Custom" ? selectedWallet.id : null}
+        initialKind={kind}
+        startCreating={quickCreate}
       />
     </Sheet>
   );
