@@ -67,9 +67,12 @@ export function AddTransactionSheet({ open, onClose }: Props) {
   const [cashNeeded, setCashNeeded] = useState(false);
   // Shortcut from the empty-category hint straight into category management.
   const [categoryManagerOpen, setCategoryManagerOpen] = useState(false);
+  // Quick create opens the manager directly on an empty draft row.
+  const [quickCreate, setQuickCreate] = useState(false);
   const submitLock = useRef(false);
   const timers = useRef<number[]>([]);
   const lastDefaults = useRef<string | null>(null);
+  const categoryGroupRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => () => timers.current.forEach(window.clearTimeout), []);
 
