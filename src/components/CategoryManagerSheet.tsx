@@ -63,13 +63,19 @@ function IconPicker({ value, onChange }: { value: IconKey; onChange: (icon: Icon
  *   - one independent list per "Custom" wallet.
  * A category created in a wallet scope can never appear in another wallet.
  */
-export function CategoryManagerSheet({ open, onClose, walletId = null }: Props) {
+export function CategoryManagerSheet({
+  open,
+  onClose,
+  walletId = null,
+  initialKind = "expense",
+  startCreating = false,
+}: Props) {
   const { t, lang } = useT();
   const all = useCategories();
   const { accounts } = useFinance();
   const customWallets = useMemo(() => accounts.filter((a) => a.type === "Custom"), [accounts]);
   const [scope, setScope] = useState<string | null>(walletId);
-  const [kind, setKind] = useState<CategoryKind>("expense");
+  const [kind, setKind] = useState<CategoryKind>(initialKind);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draftName, setDraftName] = useState("");
   const [draftIcon, setDraftIcon] = useState<IconKey>("food");
@@ -77,8 +83,15 @@ export function CategoryManagerSheet({ open, onClose, walletId = null }: Props) 
   const [confirmId, setConfirmId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (open) setScope(walletId);
-  }, [open, walletId]);
+    if (!open) return;
+    setScope(walletId);
+    setKind(initialKind);
+    // Quick create: land directly on an empty draft row for the given kind.
+    setEditingId(null);
+    setCreating(startCreating);
+    setDraftName("");
+    setDraftIcon(initialKind === "expense" ? "food" : "salary");
+  }, [open, walletId, initialKind, startCreating]);
 
   // A deleted wallet must not leave the sheet stuck on a phantom scope.
   useEffect(() => {
