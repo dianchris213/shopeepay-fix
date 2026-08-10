@@ -12,9 +12,8 @@ import {
 } from "@/lib/finance-store";
 
 /**
- * Universal rule: the category selector is ALWAYS empty by default, for every
- * wallet (including Shopeepay) and every tab. A manual pick survives unrelated
- * edits, but any tab/wallet change clears it again.
+ * Category defaults: Expense is always empty; Income on the Shopeepay wallet
+ * preselects "Driver COD". A manual pick survives unrelated edits.
  */
 
 const cash: Account = {
@@ -36,7 +35,7 @@ function pressedCategory(): string | null {
   return active?.textContent?.trim() ?? null;
 }
 
-describe("Universal empty category rules", () => {
+describe("Category default rules", () => {
   beforeEach(() => {
     hydrateState({ ...initialState, accounts: [cash], transactions: [], bills: [] });
     ensureShopeePayAccount();
@@ -49,7 +48,7 @@ describe("Universal empty category rules", () => {
 
     await user.click(screen.getByRole("button", { name: /Pemasukan|income/i }));
     await user.click(screen.getByRole("button", { name: shopeePayAccount()!.name }));
-    await waitFor(() => expect(pressedCategory()).toBeNull());
+    await waitFor(() => expect(pressedCategory()).toBe("Driver COD"));
 
     const group = screen.getByRole("group", { name: /Category|Kategori/i });
     const first = group.querySelector("button");
@@ -64,25 +63,25 @@ describe("Universal empty category rules", () => {
     }
   });
 
-  it("clears the category on every tab and wallet change", async () => {
+  it("preselects Driver COD on Shopeepay income and clears it on Expense", async () => {
     const user = userEvent.setup();
     render(<AddTransactionSheet open onClose={() => {}} />);
     await screen.findByRole("dialog");
 
     await user.click(screen.getByRole("button", { name: /Pemasukan|income/i }));
     await user.click(screen.getByRole("button", { name: shopeePayAccount()!.name }));
-    await waitFor(() => expect(pressedCategory()).toBeNull());
-    expect(screen.getByTestId("tx-create-category-hint")).toBeTruthy();
+    await waitFor(() => expect(pressedCategory()).toBe("Driver COD"));
+    expect(screen.getByTestId("tx-driver-cod-default-hint")).toBeTruthy();
 
     await user.click(screen.getByRole("button", { name: /Pengeluaran|expense/i }));
     expect(pressedCategory()).toBeNull();
     expect(screen.getByTestId("tx-create-category-hint")).toBeTruthy();
 
     await user.click(screen.getByRole("button", { name: /Pemasukan|income/i }));
-    await waitFor(() => expect(pressedCategory()).toBeNull());
+    await waitFor(() => expect(pressedCategory()).toBe("Driver COD"));
   });
 
-  it("never shows a default-category note on any wallet", async () => {
+  it("shows no default category for non-Shopeepay income wallets", async () => {
     const user = userEvent.setup();
     render(<AddTransactionSheet open onClose={() => {}} />);
     await screen.findByRole("dialog");

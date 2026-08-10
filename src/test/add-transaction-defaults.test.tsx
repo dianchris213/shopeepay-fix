@@ -69,7 +69,7 @@ describe("AddTransactionSheet defaults", () => {
     expect(screen.getByTestId("tx-category-required")).toBeTruthy();
   });
 
-  it("keeps the category empty for Income on the Shopeepay wallet", async () => {
+  it("preselects Driver COD for Income on the Shopeepay wallet", async () => {
     const user = userEvent.setup();
     render(<AddTransactionSheet open onClose={() => {}} />);
     await screen.findByRole("dialog");
@@ -84,10 +84,10 @@ describe("AddTransactionSheet defaults", () => {
       const active = Array.from(group.querySelectorAll("button")).find(
         (b) => b.getAttribute("aria-pressed") === "true",
       );
-      expect(active).toBeUndefined();
+      expect(active?.textContent?.trim()).toBe("Driver COD");
     });
-    expect(screen.getByTestId("tx-create-category-hint")).toBeTruthy();
-    expect(screen.queryByTestId("tx-default-category-note")).toBeNull();
+    expect(screen.getByTestId("tx-driver-cod-default-hint")).toBeTruthy();
+    expect(screen.queryByTestId("tx-create-category-hint")).toBeNull();
   });
 
   it("keeps the category empty when toggling back to Expense", async () => {
