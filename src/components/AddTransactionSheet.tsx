@@ -88,6 +88,7 @@ export function AddTransactionSheet({ open, onClose }: Props) {
     setCodConfirm(false);
     setCashNeeded(false);
     setCategoryManagerOpen(false);
+    setQuickCreate(false);
     setTouched(false);
     setSubmitting(false);
     submitLock.current = false;
