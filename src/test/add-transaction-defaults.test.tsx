@@ -102,7 +102,39 @@ describe("AddTransactionSheet defaults", () => {
     await user.click(screen.getByRole("button", { name: shopeePayAccount()!.name }));
     await user.click(screen.getByRole("button", { name: /Pengeluaran|expense/i }));
     const categoryGroup = screen.getByRole("group", { name: /Category|Kategori/i });
-    expect(categoryGroup.querySelectorAll("button")).toHaveLength(0);
+    expect(categoryGroup.querySelectorAll("button[aria-pressed]")).toHaveLength(0);
+
     expect(screen.getByTestId("tx-create-category-hint")).toBeTruthy();
   });
+
+  it("explains the empty list for Expense + Shopeepay and links to Settings", async () => {
+    const user = userEvent.setup();
+    render(<AddTransactionSheet open onClose={() => {}} />);
+    await screen.findByRole("dialog");
+
+    await user.click(screen.getByRole("button", { name: shopeePayAccount()!.name }));
+
+    const empty = await screen.findByTestId("tx-empty-categories");
+    expect(empty.textContent).toContain("Belum ada kategori untuk Expense + ShopeePay");
+
+    await user.click(screen.getByTestId("tx-empty-categories-link"));
+    await waitFor(() => expect(screen.getAllByRole("dialog").length).toBeGreaterThan(1));
+  });
+
+  it("refuses to submit an Expense on Shopeepay without a category", async () => {
+    const user = userEvent.setup();
+    render(<AddTransactionSheet open onClose={() => {}} />);
+    await screen.findByRole("dialog");
+
+    await user.click(screen.getByRole("button", { name: shopeePayAccount()!.name }));
+    await user.type(screen.getByLabelText("Amount in rupiah"), "25000");
+
+    const save = screen.getByRole("button", { name: /Simpan|Save/i });
+    expect(save).toBeDisabled();
+    await user.click(save.parentElement!);
+
+    expect(screen.getByTestId("tx-category-required")).toBeTruthy();
+    expect(shopeePayAccount()!.amount).toBe(0);
+  });
 });
+

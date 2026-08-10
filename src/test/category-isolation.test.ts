@@ -135,9 +135,22 @@ describe("category isolation per wallet type", () => {
     expect(visible).toEqual([]);
   });
 
+  it("keeps the ShopeePay-only rule from affecting other wallets", () => {
+    for (const walletType of ["Cash", "Bank", "E-Wallet", null]) {
+      const expense = visibleCategoriesFor({ categories: all, kind: "expense", walletType });
+      expect(expense.length).toBeGreaterThan(0);
+      expect(expense.map((c) => c.name)).toContain("Food");
+
+      const income = visibleCategoriesFor({ categories: all, kind: "income", walletType });
+      expect(income.map((c) => c.name)).toContain("Salary");
+      expect(income.length).toBeGreaterThan(1);
+    }
+  });
+
   it("returns an empty list rather than falling back to another set", () => {
     expect(
       visibleCategoriesFor({ categories: [cat("Food")], kind: "expense", walletType: "Custom" }),
     ).toEqual([]);
   });
 });
+

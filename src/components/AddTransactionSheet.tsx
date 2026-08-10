@@ -382,8 +382,28 @@ export function AddTransactionSheet({ open, onClose }: Props) {
             );
           })}
           {visibleCategories.length === 0 && (
-            <p className="text-muted-foreground col-span-4 text-[11px]">{t("tx.noCategories")}</p>
+            <p
+              data-testid="tx-empty-categories"
+              className="text-muted-foreground col-span-4 text-[11px] leading-relaxed"
+            >
+              {kind === "expense" && isShopeePayWallet(selectedWallet) ? (
+                <>
+                  Belum ada kategori untuk Expense + ShopeePay. Buat kategori dulu di{" "}
+                  <button
+                    type="button"
+                    data-testid="tx-empty-categories-link"
+                    onClick={() => setCategoryManagerOpen(true)}
+                    className="tap text-primary font-semibold underline underline-offset-2"
+                  >
+                    Pengaturan / Settings
+                  </button>
+                </>
+              ) : (
+                t("tx.noCategories")
+              )}
+            </p>
           )}
+
         </div>
 
         {/* Expense: category always starts empty. */}
